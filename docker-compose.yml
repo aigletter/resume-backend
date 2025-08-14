@@ -1,0 +1,40 @@
+services:
+    # PHP-FPM
+    php:
+        build: Dockerfile
+        image: php:8.4-fpm
+        container_name: resume-backend-php
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+            #- ./php.ini:/usr/local/etc/php/conf.d/custom.ini
+        depends_on:
+            - db
+
+    # Nginx
+    nginx:
+        image: nginx:1.29
+        container_name: resume-backend-nginx
+        ports:
+            - "8080:80"
+        volumes:
+            - ./:/var/www
+            - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+
+    # MySQL
+    db:
+        image: mysql:8.0
+        container_name: resume-backend-mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+            MYSQL_DATABASE: ${DB_DATABASE:-app}
+            MYSQL_USER: ${DB_USERNAME:-app}
+            MYSQL_PASSWORD: app
+        volumes:
+            - db-data:/var/lib/mysql
+
+volumes:
+    db-data:
